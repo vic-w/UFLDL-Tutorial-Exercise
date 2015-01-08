@@ -12,7 +12,7 @@ hiddenSize = 400;           % number of hidden units
 
 epsilon = 0.1;	       % epsilon for ZCA whitening
 
-poolDim = 19;          % dimension of pooling region
+poolDim = 8;          % dimension of pooling region
 
 
 
@@ -23,24 +23,37 @@ b = optTheta(2*hiddenSize*visibleSize+1:2*hiddenSize*visibleSize+hiddenSize);
 
 patches = (W*ZCAWhite)';
 
-figure(1);
+figure('Name', 'Patches');
 displayColorNetwork( patches );
 
 
 load stlTrainSubset.mat
+
 images = reshape(trainImages, 64*64*3, 2000);
-figure(2);
+figure('Name', 'Train Images');
 displayColorNetwork(images(:, 1:64));
 
-image = reshape(images(:,1), 64,64,3);
 
-tic();
+load stlTestSubset.mat
+images = reshape(testImages, 64*64*3, 3200);
+figure('Name', 'Test Images');
+displayColorNetwork(images(:, 1:64));
+
+
+image = reshape(images(:,1), 64,64,3);
+figure('Name', 'The First Test Image');
+displayColorNetwork(images(:, 1));
 
 convolvedFeatures = cnnConvolve(patchDim, hiddenSize, image, W, b, ZCAWhite, meanPatch);
+conv = reshape( permute(convolvedFeatures, [3 4 2 1]), 57*57, 400);
+figure('Name', 'Convolved Result');
+display_network(conv);
     
 pooledFeatures = cnnPool(poolDim, convolvedFeatures);
+pool = reshape( permute(pooledFeatures, [3 4 2 1]), 7*7, 400);
+figure('Name', 'PooledResult');
+display_network(pool);
 
-toc();
 
 
 
