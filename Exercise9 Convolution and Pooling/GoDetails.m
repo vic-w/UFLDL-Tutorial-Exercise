@@ -18,10 +18,12 @@ poolDim = 8;          % dimension of pooling region
 
 load STL10Features.mat;
 
-W = reshape(optTheta(1:visibleSize * hiddenSize), hiddenSize, visibleSize);
-b = optTheta(2*hiddenSize*visibleSize+1:2*hiddenSize*visibleSize+hiddenSize);
+W1 = reshape(optTheta(1:hiddenSize*visibleSize), hiddenSize, visibleSize);
+W2 = reshape(optTheta(hiddenSize*visibleSize+1:2*hiddenSize*visibleSize), visibleSize, hiddenSize);
+b1 = optTheta(2*hiddenSize*visibleSize+1:2*hiddenSize*visibleSize+hiddenSize);
+b2 = optTheta(2*hiddenSize*visibleSize+hiddenSize+1:end);
 
-patches = (W*ZCAWhite)';
+patches = (W1*ZCAWhite)';
 
 figure('Name', 'Patches');
 displayColorNetwork( patches );
@@ -44,7 +46,7 @@ image = reshape(images(:,1), 64,64,3);
 figure('Name', 'The First Test Image');
 displayColorNetwork(images(:, 1));
 
-convolvedFeatures = cnnConvolve(patchDim, hiddenSize, image, W, b, ZCAWhite, meanPatch);
+convolvedFeatures = cnnConvolve(patchDim, hiddenSize, image, W1, b1, ZCAWhite, meanPatch);
 conv = reshape( permute(convolvedFeatures, [3 4 2 1]), 57*57, 400);
 figure('Name', 'Convolved Result');
 display_network(conv);
@@ -54,6 +56,13 @@ pool = reshape( permute(pooledFeatures, [3 4 2 1]), 7*7, 400);
 figure('Name', 'PooledResult');
 display_network(pool);
 
+%reconstruct
+
+rec_image = zeros(7*patchDim, 7*patchDim, imageChannels);
+
+rec_patch = W2 * pool';
+figure('Name', 'Reconstructed Patches');
+displayColorNetwork(rec_patch);
 
 
 
