@@ -54,18 +54,18 @@ displayColorNetwork( (W*ZCAWhite)');
 
 
 
-stepSize = 25;
+stepSize = 5;
 assert(mod(hiddenSize, stepSize) == 0, 'stepSize should divide hiddenSize');
 
 load stlTrainSubset.mat % loads numTrainImages, trainImages, trainLabels
 load stlTestSubset.mat  % loads numTestImages,  testImages,  testLabels
 
-pooledFeaturesTrain = zeros(hiddenSize, numTrainImages, ...
-    floor((imageDim - patchDim + 1) / poolDim), ...
-    floor((imageDim - patchDim + 1) / poolDim) );
-pooledFeaturesTest = zeros(hiddenSize, numTestImages, ...
-    floor((imageDim - patchDim + 1) / poolDim), ...
-    floor((imageDim - patchDim + 1) / poolDim) );
+% pooledFeaturesTrain = zeros(hiddenSize, numTrainImages, ...
+%     floor((imageDim - patchDim + 1) / poolDim), ...
+%     floor((imageDim - patchDim + 1) / poolDim) );
+% pooledFeaturesTest = zeros(hiddenSize, numTestImages, ...
+%     floor((imageDim - patchDim + 1) / poolDim), ...
+%     floor((imageDim - patchDim + 1) / poolDim) );
 
 
 for convPart = 1:(hiddenSize / stepSize)
@@ -75,31 +75,43 @@ for convPart = 1:(hiddenSize / stepSize)
     bs(convPart,:,:) = b(featureStart:featureEnd);  
 end
 
+tic();
+matlabpool open 8
 parfor convPart = 1:(hiddenSize / stepSize)
-    
+    featureStart = (convPart - 1) * stepSize + 1;
+    featureEnd = convPart * stepSize;
     fprintf('Step %d: features %d to %d\n', convPart, featureStart, featureEnd);  
     Wt = Ws(convPart,:,:); Wt = reshape(Wt, size(Wt,2), size(Wt,3));
     bt = bs(convPart,:,:); bt = reshape(bt, size(bt,2), size(bt,3));
     
-    fprintf('Convolving and pooling train images\n');
+    %fprintf('Convolving and pooling train images\n');
     convolvedFeaturesThis = cnnConvolve(patchDim, stepSize, ...
         trainImages, Wt, bt, ZCAWhite, meanPatch);
+   
     pooledFeaturesThis = cnnPool(poolDim, convolvedFeaturesThis);
-    %pooledFeaturesTrain(convPart) = pooledFeaturesThis;   
+    pooledFeaturesTrain(convPart,:,:,:,:) = pooledFeaturesThis;   
 
     %clear convolvedFeaturesThis pooledFeaturesThis;
     
-    fprintf('Convolving and pooling test images\n');
+    %fprintf('Convolving and pooling test images\n');
     convolvedFeaturesThis = cnnConvolve(patchDim, stepSize, ...
         testImages, Wt, bt, ZCAWhite, meanPatch);
     pooledFeaturesThis = cnnPool(poolDim, convolvedFeaturesThis);
-    %pooledFeaturesTest(convPart) = pooledFeaturesThis;   
+    pooledFeaturesTest(convPart,:,:,:,:) = pooledFeaturesThis;   
 
 
     %clear convolvedFeaturesThis pooledFeaturesThis;
 
 end
+matlabpool close
+toc();
 
+pooledFeaturesTrain = reshape(pooledFeaturesTrain, hiddenSize, numTrainImages, ...
+    floor((imageDim - patchDim + 1) / poolDim), ...
+    floor((imageDim - patchDim + 1) / poolDim));
+pooledFeaturesTest = reshape(pooledFeaturesTest, hiddenSize, numTestImages, ...
+    floor((imageDim - patchDim + 1) / poolDim), ...
+    floor((imageDim - patchDim + 1) / poolDim) );
 
 % You might want to save the pooled features since convolution and pooling takes a long time
  save('cnnPooledFeatures8.mat', 'pooledFeaturesTrain', 'pooledFeaturesTest');
