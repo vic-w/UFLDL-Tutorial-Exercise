@@ -132,20 +132,21 @@ options.display = 'on';
 %% STEP 5: Visualization 
 
 W1 = reshape(opttheta(1:hiddenSize*visibleSize), hiddenSize, visibleSize);
-W2 = reshape(theta(hiddenSize*visibleSize+1:2*hiddenSize*visibleSize), visibleSize, hiddenSize);
-b1 = theta(2*hiddenSize*visibleSize+1:2*hiddenSize*visibleSize+hiddenSize);
-b2 = theta(2*hiddenSize*visibleSize+hiddenSize+1:end);
+W2 = reshape(opttheta(hiddenSize*visibleSize+1:2*hiddenSize*visibleSize), visibleSize, hiddenSize);
+b1 = opttheta(2*hiddenSize*visibleSize+1:2*hiddenSize*visibleSize+hiddenSize);
+b2 = opttheta(2*hiddenSize*visibleSize+hiddenSize+1:end);
 
 figure('Name', 'Trained parameters');
-display_network(W1', 12); 
+display_network(W1'); 
 
+[ndims, m] = size(patches);
 z2 = W1 * patches + repmat(b1,1,m);
 a2 = sigmoid(z2);
 z3 = W2 * a2 + repmat(b2,1,m);
 a3 = sigmoid(z3);
 
 figure('Name', 'Reconstruction of patches');
-display_network(a3', 12); 
+display_network(a3(:,1:100)); 
 
 print -djpeg weights.jpg   % save the visualization to a file 
 
