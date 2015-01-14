@@ -42,26 +42,27 @@ figure('Name', 'Test Images');
 displayColorNetwork(images(:, 1:64));
 
 
-image = reshape(images(:,1), 64,64,3);
+nthTestImage = 2;
+image = reshape(images(:,nthTestImage), 64,64,3);
 figure('Name', 'The First Test Image');
-displayColorNetwork(images(:, 1));
+displayColorNetwork(images(:, nthTestImage));
 
 convolvedFeatures = cnnConvolve(patchDim, hiddenSize, image, W1, b1, ZCAWhite, meanPatch);
-conv = reshape( permute(convolvedFeatures, [3 4 2 1]), 57*57, 400);
+conv2d = reshape( permute(convolvedFeatures, [3 4 2 1]), 57*57, 400);
 figure('Name', 'Convolved Result');
-display_network(conv);
+display_network(conv2d);
     
 pooledFeatures = cnnPool(poolDim, convolvedFeatures);
-pool = reshape( permute(pooledFeatures, [3 4 2 1]), 7*7, 400);
+pool2d = reshape( permute(pooledFeatures, [4 3 2 1]), 7*7, 400);
 figure('Name', 'PooledResult');
-display_network(pool);
+display_network(pool2d);
 
 %reconstruct
 
 rec_image = zeros(7*patchDim, 7*patchDim, imageChannels);
 
-rec_patch = W2 * pool';
-figure('Name', 'Reconstructed Patches');
+rec_patch = W2 * pool2d' + b2 * ones(1,49);
+figure('Name', 'Reconstructed First Test Image');
 displayColorNetwork(rec_patch);
 
 
